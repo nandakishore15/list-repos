@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add an issue!</title>
+    <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+    <style>
+        td {
+            width: 600px;
+        }
+
+        .error {
+            display: none;
+            color: red;
+        }
+
+        .result {
+            display: none;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            var issuesCreatedSinceLastweekExcludingToday = 0;
+            var totalIssues = 0;
+            var issuesCreateSinceYesterday = 0;
+            var issuesSinceLastWeek = 0;
+            $("#submit").click(function() {
+                //Check if the string entered is a valid URL.
+                if (isValidUrl($('#githubid').val())) {
+                    //Split the urlString to get the Repo's name and the owner's name.
+                    var splitUrl = $('#githubid').val().split("/");
+                    var repoName = splitUrl[splitUrl.length - 1];
+                    var ownerName = splitUrl[splitUrl.length - 2];
+                    //Make an asynchronous call to the API endpoint "/repos/:ownername/:reponame/" to see if the API is public, if yes store the no. of total open issues/
+                    //Throw an error if the API call fails. Else, make two asynchronous requests to the "/repos/:ownername/:reponame/issues" endPoint API.
+                    $.ajax({
+                        url: "https://api.github.com/repos/" + ownerName + "/" + repoName,
+                        success: function(data) {
+                            totalIssues = data['open_issues_count'];
+                            $('.total-issues-open').text(totalIssues);
+                            time = new Date();
+                            timeNow = time.getTime();
+                            timeYesterday = timeNow - (24 * 3600 * 1000);
+                            timeLastWeek = timeNow - (7 * 24 * 3600 * 1000);
+                            timeNow = new Date(timeNow).toISOString();
+                            timeYesterday = new Date(timeYesterday).toISOString();
+                            timeLastWeek = new Date(timeLastWeek).toISOString();
+                            $.ajax({
+                                url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?state=open&since=" + timeYesterday,
+                                success: function(issues) {
+                                    issuesCreateSinceYesterday = issues.length;
+                                    $('.last-24-hours').text(issuesCreateSinceYesterday);
+                                    $.ajax({
+                                        url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?state=open&since=" + timeLastWeek,
+                                        success: function(issues) {
+                                            issuesSinceLastWeek = issues.length;
+                                            issuesCreatedSinceLastweekExcludingToday = issuesSinceLastWeek - issuesCreateSinceYesterday;
+                                            $('.last-week-before-today').text(issuesCreatedSinceLastweekExcludingToday);
+                                            issuesOlderThanAWeek = totalIssues - issuesSinceLastWeek;
+                                            $('.older-than-a-week').text(issuesOlderThanAWeek);
+                                            $('.error').css('display', "none");
+                                            $('.result').css('display', "block");
+
+                                        }
+                                    });
+                                }
+                            });
+
+                        },
+                        error: function(data) {
+                            $('.error').css('display', "block");
+                            $('.result').css('display', "none");
+                        }
+                    });
+
+                } else {
+                    $('.error').css('display', "block");
+                    $('.result').css('display', "none");
+                }
+            });
+            //function to check if the URL is valid.
+            function isValidUrl(textval) {
+                var urlregex = new RegExp(
+                        "^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
+                return urlregex.test(textval);
+            }
+        });
+    </script>
+</head>
+
+<body>
+Enter the github link below.
+<br>
+<input type="text" id="githubid" class="textbox">
+<br>
+<button id="submit">submit</button>
+<div class="error">
+    <br> Please enter a valid github public repository url.
+</div>
+<div class="result">
+    <table>
+        <tr>
+            <td>Total number of open issues</td>
+            <td class="total-issues-open"></td>
+        </tr>
+        <tr>
+            <td>Number of open issues that were opened in the last 24 hours</td>
+            <td class="last-24-hours"></td>
+        </tr>
+        <tr>
+            <td>Number of open issues that were opened more than 24 hours ago but less than 7 days ago</td>
+            <td class="last-week-before-today"></td>
+        </tr>
+        <tr>
+            <td>Number of open issues that were opened more than 7 days ago </td>
+            <td class="older-than-a-week"></td>
+        </tr>
+    </table>
+</div>
+
+</body>
+
+</html>
