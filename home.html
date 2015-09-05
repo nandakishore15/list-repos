@@ -47,20 +47,33 @@
                             timeYesterday = new Date(timeYesterday).toISOString();
                             timeLastWeek = new Date(timeLastWeek).toISOString();
                             $.ajax({
-                                url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?state=open&since=" + timeYesterday,
+                                url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=none&state=open&since=" + timeYesterday,
                                 success: function(issues) {
                                     issuesCreateSinceYesterday = issues.length;
-                                    $('.last-24-hours').text(issuesCreateSinceYesterday);
                                     $.ajax({
-                                        url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?state=open&since=" + timeLastWeek,
+                                        url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=*&state=open&since=" + timeYesterday,
                                         success: function(issues) {
-                                            issuesSinceLastWeek = issues.length;
-                                            issuesCreatedSinceLastweekExcludingToday = issuesSinceLastWeek - issuesCreateSinceYesterday;
-                                            $('.last-week-before-today').text(issuesCreatedSinceLastweekExcludingToday);
-                                            issuesOlderThanAWeek = totalIssues - issuesSinceLastWeek;
-                                            $('.older-than-a-week').text(issuesOlderThanAWeek);
-                                            $('.error').css('display', "none");
-                                            $('.result').css('display', "block");
+                                            issuesCreateSinceYesterday += issues.length;
+
+                                            $('.last-24-hours').text(issuesCreateSinceYesterday);
+                                            $.ajax({
+                                                url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=none&state=open&since=" + timeLastWeek,
+                                                success: function (issues) {
+                                                    issuesSinceLastWeek = issues.length;
+                                                    $.ajax({
+                                                        url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=*&state=open&since=" + timeLastWeek,
+                                                        success: function (issues) {
+                                                            issuesSinceLastWeek += issues.length;
+                                                            issuesCreatedSinceLastweekExcludingToday = issuesSinceLastWeek - issuesCreateSinceYesterday;
+                                                            $('.last-week-before-today').text(issuesCreatedSinceLastweekExcludingToday);
+                                                            issuesOlderThanAWeek = totalIssues - issuesSinceLastWeek;
+                                                            $('.older-than-a-week').text(issuesOlderThanAWeek);
+                                                            $('.error').css('display', "none");
+                                                            $('.result').css('display', "block");
+                                                        }
+                                                    });
+                                                }
+                                            });
 
                                         }
                                     });
@@ -93,8 +106,9 @@
 Enter the github link below.
 <br>
 <input type="text" id="githubid" class="textbox">
-<br>
+<br/>
 <button id="submit">submit</button>
+<p/>
 <div class="error">
     <br> Please enter a valid github public repository url.
 </div>
