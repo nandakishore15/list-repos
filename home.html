@@ -23,7 +23,7 @@
         $(document).ready(function() {
             var issuesCreatedSinceLastweekExcludingToday = 0;
             var totalIssues = 0;
-            var issuesCreateSinceYesterday = 0;
+            var issuesCreatedSinceYesterday = 0;
             var issuesSinceLastWeek = 0;
             $("#submit").click(function() {
                 //Check if the string entered is a valid URL.
@@ -49,13 +49,13 @@
                             $.ajax({
                                 url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=none&state=open&since=" + timeYesterday,
                                 success: function(issues) {
-                                    issuesCreateSinceYesterday = issues.length;
+                                    issuesCreatedSinceYesterday = issues.length;
                                     $.ajax({
                                         url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=*&state=open&since=" + timeYesterday,
                                         success: function(issues) {
-                                            issuesCreateSinceYesterday += issues.length;
+                                            issuesCreatedSinceYesterday += issues.length;
 
-                                            $('.last-24-hours').text(issuesCreateSinceYesterday);
+                                            $('.last-24-hours').text(issuesCreatedSinceYesterday);
                                             $.ajax({
                                                 url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=none&state=open&since=" + timeLastWeek,
                                                 success: function (issues) {
@@ -64,7 +64,7 @@
                                                         url: "https://api.github.com/repos/" + ownerName + "/" + repoName + "/issues?milestone=*&state=open&since=" + timeLastWeek,
                                                         success: function (issues) {
                                                             issuesSinceLastWeek += issues.length;
-                                                            issuesCreatedSinceLastweekExcludingToday = issuesSinceLastWeek - issuesCreateSinceYesterday;
+                                                            issuesCreatedSinceLastweekExcludingToday = issuesSinceLastWeek - issuesCreatedSinceYesterday;
                                                             $('.last-week-before-today').text(issuesCreatedSinceLastweekExcludingToday);
                                                             issuesOlderThanAWeek = totalIssues - issuesSinceLastWeek;
                                                             $('.older-than-a-week').text(issuesOlderThanAWeek);
